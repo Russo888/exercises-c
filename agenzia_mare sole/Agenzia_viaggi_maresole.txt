@@ -1,0 +1,291 @@
+/*
+ * Agenzia_viaggi_maresole.c
+ *
+ *  Created on: 28 dic 2019
+ *      Author: Vincenzo
+ */
+#include <stdio.h>
+#include <string.h>
+#define MAX 1000
+
+struct Clienti {
+	char  nome[50];
+	int numero_cabine;
+	int richiesta_giorno;
+	int richiesta_mese;
+	int richiesta_anno;
+};
+
+struct Barche_t {
+	char  codice[100];
+	int numero_cabine;
+	char  nome_skipper[50];
+	int occupazione_giorno;
+	int occupazione_mese;
+	int occupazione_anno;
+	int cabine_disponibili;
+	int cliente_corrente;
+	struct Clienti clienti[MAX];
+};
+
+void inserimenti();
+void inserisci_clienti();
+void menu(char opzione);
+void print_stats();
+void leggi_barca(struct Barche_t *barca);
+void leggi_cliente(struct Clienti *cliente);
+int associa_cliente(struct Clienti cliente, struct Barche_t *barca);
+void ricerca_skipper();
+
+//variabile globale barche
+
+struct Barche_t barche[MAX];
+int numero_barche_totali;
+int cabine_stats[MAX];
+
+int main ()
+{
+
+	char opzione[1];
+	opzione[0] = '0';
+	numero_barche_totali = 0;
+	//inizializzo cabine_stats
+	for(int i = 0; i < MAX; i++){
+		cabine_stats[i] = 0;
+	}
+
+	printf("-----Agenzia Viaggi Mare-Sole-----\n\n");
+	fflush(stdout);
+
+
+	while(opzione[0] == '0' || opzione[0] == '1' || opzione[0] == '2'|| opzione[0] == '3'){
+		printf("Inserisci opzione \n0 == inserimento barche\n 1 = inserisci i clienti\n 2 = ricerca skipper\n 3 = statistiche\n\nQualsiasi numero > 3 per terminare.\n\n");
+		fflush(stdout);
+		scanf("%s", opzione);
+		menu(opzione[0]);
+	};
+
+	printf("Programma terminato.");
+	fflush(stdout);
+
+}
+
+
+void menu(char opzione){
+
+
+	if(opzione == '0'){
+		inserimenti();
+	}
+	if(opzione == '1'){
+		//ricerca skipper
+    inserisci_clienti();
+		
+
+	}
+	if(opzione == '2'){
+		//statistiche
+    ricerca_skipper();
+	 
+	}
+  if(opzione == '3'){
+		//statistiche
+     
+		print_stats();
+	}
+}
+
+void print_stats(){
+	for(int i = 0; i < MAX; i++){
+		if(cabine_stats[i] != 0){
+			printf("%d richieste verso la cabina numero %d\n",cabine_stats[i],i);
+			fflush(stdout);
+		}
+	}
+}
+
+void ricerca_skipper(){
+	char nome_skipper[50];
+	int flag = 0;
+	printf("Inserisci nome skipper\n");
+	fflush(stdout);
+	scanf("%s", nome_skipper);
+	for(int i = 0; i < numero_barche_totali; i++){
+		if(strcmp(nome_skipper, barche[i].nome_skipper) == 0){
+			flag = 1;
+			printf("Skipper Trovato\n");
+			printf("Codice Barca: %s\n",barche[i].codice);
+			printf("Cabine totali: %d\n",barche[i].numero_cabine);
+			printf("Cabine disponibili: %d\n",barche[i].cabine_disponibili);
+			printf("Disponobilita'dal %d/%d/%d\n",barche[i].occupazione_giorno,barche[i].occupazione_mese,barche[i].occupazione_anno);
+			printf("Numero clienti attuali: %d\n",(barche[i].cliente_corrente+1));
+			fflush(stdout);
+			break;
+		}
+	}
+	if(flag == 0){
+		printf("Skipper NON trovato\n");
+		fflush(stdout);
+	}
+}
+
+
+
+void inserimenti(){
+	int num_barche = 0;
+	
+
+	printf("Inserisci numero barche disponibili\n");
+	fflush(stdout);
+	scanf("%d", &num_barche);
+
+	if(num_barche>0){
+		numero_barche_totali = num_barche;
+		//inserisci i dettagli delle barche da tastiera
+		for(int i = 0; i < num_barche; i++){
+			struct Barche_t barca;
+			leggi_barca(&barca);
+			barche[i] = barca;
+		}
+		
+	}
+}
+
+
+void inserisci_clienti(){
+  if(numero_barche_totali > 0){
+      int num_clienti = 0;
+      printf("Inserisci numero clienti supportati\n");
+      fflush(stdout);
+      scanf("%d", &num_clienti);
+
+      for(int i = 0; i < num_clienti; i++){
+        struct Clienti cliente;
+        leggi_cliente(&cliente);
+        int flag = 0;
+        for(int j = 0; j < numero_barche_totali && flag == 0; j++){
+          flag = associa_cliente(cliente,&barche[j]);
+          if(flag == 1){
+            printf("Richiesta soddisfatta:\n");
+            printf("ID barca associata:%s\n",barche[j].codice);
+            printf("Nome Skipper:%s\n",barche[j].nome_skipper);
+
+          }
+        }
+        if(flag == 0){
+          printf("Non e' stato possibile soddisfare la richiesta di inserimento cliente!\n");
+          fflush(stdout);
+        }
+
+      }
+  }else{
+     printf("Non è stata ancora inserita alcuna barca.\n");
+     fflush(stdout);
+  }
+}
+
+void leggi_barca(struct Barche_t *barca){
+
+	int d, m, year;
+	char code[100];
+	char skipper[50];
+	int cabins;
+	printf("Inserisci codice barca\n");
+	fflush(stdout);
+	scanf("%s", barca->codice);
+	printf("Inserisci numero cabine\n");
+	fflush(stdout);
+	scanf("%d", &barca->numero_cabine);
+	printf("Inserisci nome skipper\n");
+	fflush(stdout);
+	scanf("%s", barca->nome_skipper);
+
+	fflush(stdout);
+	printf("Inserisci data di disponibilita' barca nel formato gg/mm/yyyy\n");
+	fflush(stdout);
+	scanf("%d/%d/%d", &d,&m,&year);
+
+	if(d > 31){
+		printf("Il giorno deve essere compreso tra 1 e 31 %d\n",d);
+		fflush(stdout);
+		return;
+	}
+
+	if(m > 12){
+		printf("Il mese deve essere compreso tra 1 e 12");
+		fflush(stdout);
+		return;
+	}
+
+	if(year < 1){
+		printf("L'anno deve essere un numero positivo");
+		fflush(stdout);
+		return;
+	}
+
+	barca->occupazione_giorno = d;
+	barca->occupazione_mese = m;
+	barca->occupazione_anno = year;
+	barca->cabine_disponibili = barca->numero_cabine;
+	barca->cliente_corrente = -1;
+
+
+
+}
+void leggi_cliente(struct Clienti *cliente){
+	int d, m, year;
+	printf("Inserisci nome cliente\n");
+	fflush(stdout);
+	scanf("%s",  cliente->nome);
+	printf("Inserisci numero cabine richieste\n");
+	fflush(stdout);
+	scanf("%d", &cliente->numero_cabine);
+	cabine_stats[cliente->numero_cabine] += 1;
+	printf("Inserisci data di partenza presunta nel formato gg/mm/yyyy\n");
+	fflush(stdout);
+	//splitting stringa data in giorno, occupazione_mese e occupazione_anno
+	scanf("%d/%d/%d", &d,&m,&year);
+
+	if(d > 31){
+		printf("Il giorno deve essere compreso tra 1 e 31 %d\n",d);
+		fflush(stdout);
+		return;
+	}
+
+	if(m > 12){
+		printf("Il mese deve essere compreso tra 1 e 12");
+		fflush(stdout);
+		return;
+	}
+
+	if(year < 1){
+		printf("L'anno deve essere un numero positivo");
+		fflush(stdout);
+		return;
+	}
+
+	cliente->richiesta_giorno = d;
+	cliente->richiesta_mese = m;
+	cliente->richiesta_anno = year;
+
+}
+
+int associa_cliente(struct Clienti cliente, struct Barche_t *barca){
+	int flag = 0;
+	if(cliente.richiesta_anno == barca->occupazione_anno){
+		if(cliente.richiesta_mese == barca->occupazione_mese){
+			if(cliente.richiesta_giorno >= barca->occupazione_giorno){
+				if(cliente.numero_cabine <= barca->cabine_disponibili){
+					barca->cliente_corrente = barca->cliente_corrente + 1;
+					barca->clienti[barca->cliente_corrente] = cliente;
+					//barca->cabine_disponibili -= cliente.numero_cabine;//piu clienti condividono una unica barca
+					barca->cabine_disponibili = 0;// solo un cliente per data
+					flag = 1;
+				}
+			}
+		}
+	}
+	return flag;
+}
+
+
